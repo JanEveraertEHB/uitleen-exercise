@@ -26,7 +26,7 @@ function getToolListAndDisplay() {
       // the buttons only exist after rendering, so add the listeners now
       addClickListeners("lend-button", "tool-lend-", lendTool);
       addClickListeners("return-button", "tool-return-", returnTool);
-      addClickListeners("delete-button", "tool-delete-", deleteTool);
+      addClickListeners("delete-button", "tool-delete-", deleteTool);//wazzup
     })
     .catch((e) => {
       console.error(e);
