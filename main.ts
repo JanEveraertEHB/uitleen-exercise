@@ -5,11 +5,15 @@ import knexfile from "./knexfile.js";
 const db = knex(knexfile);
 
 const app = express();
-const port = 3000;
+
+
+console.log("i'll edit this one");
+const port = 3001;
 
 // parse JSON request bodies into req.body
 app.use(express.json());
 
+db.insert({student: "hello"});
 // serve the frontend (index.html, script.js, ...) from the public folder
 app.use(express.static("public"));
 

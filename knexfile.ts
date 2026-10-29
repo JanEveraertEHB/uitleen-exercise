@@ -19,4 +19,6 @@ const config: Knex.Config = {
   },
 };
 
+
+// no
 export default config;
