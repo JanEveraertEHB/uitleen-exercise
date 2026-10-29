@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import knex from "knex";
 import knexfile from "./knexfile.js";
 
+
 const db = knex(knexfile);
 
 const app = express();
@@ -123,6 +124,15 @@ app.post("/api/tools/:id/lend", async (req: Request, res: Response) => {
       return;
     }
 
+    // insert it into the history
+    const toInsert = {
+      toolId: tool.id,
+      studentId: student.id,
+      lentAt: new Date().toISOString(),
+      returnedAt: null
+    };
+    const insertedLoans = await db.insert(toInsert).into("loans");
+
     res.send({ ...tool, lentToStudentId: student.id });
   } catch (e) {
     console.error(e);
@@ -133,16 +143,25 @@ app.post("/api/tools/:id/lend", async (req: Request, res: Response) => {
 // POST: a tool is returned, so it is available again
 app.post("/api/tools/:id/return", async (req: Request, res: Response) => {
   try {
+    // tool exist?
     const tool = await db.select("*").table("tools").where({ id: req.params.id }).first();
     if (!tool) {
       res.status(404).send({ error: "Tool not found" });
       return;
     }
 
+    
     const updatedRows = await db.update({ lentToStudentId: null })
       .table("tools").where({ id: tool.id }).whereNotNull("lentToStudentId");
     if (updatedRows === 0) {
       res.status(409).send({ error: "This tool is not lent out" });
+      return;
+    }
+
+    const updatedLoansRows = await db.update({returnedAt: new Date().toISOString()}).table("loans")
+      .where({toolId: tool.id}).whereNull("returnedAt");
+    if (updatedLoansRows === 0) {
+      res.status(409).send({ error: "No record updated in Loans table" });
       return;
     }
 
@@ -151,6 +170,36 @@ app.post("/api/tools/:id/return", async (req: Request, res: Response) => {
     console.error(e);
     res.status(500).send({ error: "Something went wrong" });
   }
+});
+
+
+// GET all tools. lentToStudentId is null when the tool is available.
+app.get("/api/tools/:id/history", async (req: Request, res: Response) => {
+
+  const tool = await db.select("*").table("tools").where({ id: req.params.id }).first();
+  if (!tool) {
+    res.status(404).send({ error: "Tool not found" });
+    return;
+  }
+
+  const requestToolId = req.params.id;
+
+
+  db
+  .select(["loans.id", "students.firstName", "tools.name", "loans.lentAt", "loans.returnedAt"])
+  .join("students", "students.id", "loans.studentId")
+  .join("tools", "tools.id", "loans.toolId")
+  .table("loans")
+  .where({toolId: requestToolId})
+  .orderBy("loans.id", "DESC")
+    .then((data) => {
+      console.log(data)
+      res.send(data);
+    })
+    .catch((e) => {
+      console.error(e);
+      res.status(500).send({ error: "Something went wrong" });
+    });
 });
 
 app.listen(port, () => {

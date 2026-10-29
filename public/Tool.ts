@@ -36,8 +36,14 @@ export default class Tool {
     const htmlString = `
       <article id="tool-${this.id}">
         <h2>${escapeHtml(this.name)}</h2>
-        <p>${escapeHtml(this.description ?? "")}</p>${statusAndButton}
+        <p>${escapeHtml(this.description ?? "")}</p>
+        ${statusAndButton}
+        <h3>History</h3>
+
+        <div id="history-container-${this.id}"></div>
+
         <button class="delete-button" id="tool-delete-${this.id}">Delete</button>
+        <button class="history-button" id="tool-history-${this.id}">History</button>
       </article>
     `;
 

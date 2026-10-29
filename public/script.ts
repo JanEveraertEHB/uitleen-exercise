@@ -1,9 +1,10 @@
 import Tool from "./Tool.js";
+import Loan from "./Loan.js";
 
 const API_URI = "http://localhost:3000";
 
 function init() {
-  document.getElementById("submitForm")?.addEventListener("click", (event) => {
+  document.getElementById("submitAddToolForm")?.addEventListener("click", (event) => {
     event.preventDefault();
     addTool();
   });
@@ -17,6 +18,7 @@ function getToolListAndDisplay() {
   fetch(API_URI + "/api/tools")
     .then((response) => response.json())
     .then((data) => {
+      console.log("tools:", data)
       // turn every plain object from the API into a Tool instance and render it
       data.forEach((element: Tool) => {
         const toolInstance = new Tool(element.id, element.name, element.description, element.lentToStudentId);
@@ -27,6 +29,7 @@ function getToolListAndDisplay() {
       addClickListeners("lend-button", "tool-lend-", lendTool);
       addClickListeners("return-button", "tool-return-", returnTool);
       addClickListeners("delete-button", "tool-delete-", deleteTool);
+      addClickListeners("history-button", "tool-history-", toolHistory);
     })
     .catch((e) => {
       console.error(e);
@@ -90,7 +93,31 @@ function returnTool(id: string) {
 function deleteTool(id: string) {
   sendRequest("/api/tools/" + id, "DELETE");
 }
+function toolHistory(id: string) {
+  const historyContainer = document.getElementById("history-container-"+id) as HTMLDivElement;
+  historyContainer.innerHTML = "";
+  fetch(API_URI + "/api/tools/"+id+"/history")
+    .then((r) => r.json()) 
+    .then(data => {
+      const table = document.createElement("table");
+      const headerRow = `<tr><th>name</th><th>start</th><th>Duration</th></tr>`
+      table.insertAdjacentHTML("beforeend", headerRow);
 
+      const amountOfTimesText = `<p>Lent out ${data.length} times</p>`
+      document.getElementById("history-container-"+id)?.insertAdjacentHTML("beforeend", amountOfTimesText);
+
+      data.forEach((record: any) => {
+        const loanInstance = new Loan(record.id, record.firstName, record.name, record.lentAt, record.returnedAt)
+        console.log(loanInstance)
+        const htmlString = loanInstance.renderHTMLString();
+        table.insertAdjacentHTML("beforeend", htmlString);
+      })
+
+      console.log(table)
+      document.getElementById("history-container-"+id)?.insertAdjacentElement("beforeend", table);
+    })
+  console.log(id)
+}
 function addTool() {
   const nameElement = document.getElementById("toolName") as HTMLInputElement;
   const descriptionElement = document.getElementById("toolDescription") as HTMLInputElement;

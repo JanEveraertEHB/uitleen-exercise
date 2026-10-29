@@ -41,12 +41,12 @@ Tips for all tickets:
 - A loan that was not returned yet shows "Still lent out" instead of a duration.
 
 **Acceptance criteria**
-- [ ] Lend a tool and return it: the history shows one row with the first name and a duration.
-- [ ] A tool that was lent out three times shows "Lent out 3 times" and three rows, newest first.
-- [ ] A tool that is lent out right now shows "Still lent out".
-- [ ] The response of `GET /api/tools/:id/history` contains no student numbers.
-- [ ] The history of a tool that does not exist returns `404`.
-- [ ] Deleting a tool that has a history works, and its history is gone too.
+- [x] Lend a tool and return it: the history shows one row with the first name and a duration.
+- [x] A tool that was lent out three times shows "Lent out 3 times" and three rows, newest first.
+- [x] A tool that is lent out right now shows "Still lent out".
+- [x] The response of `GET /api/tools/:id/history` contains no student numbers.
+- [x] The history of a tool that does not exist returns `404`.
+- [x] Deleting a tool that has a history works, and its history is gone too.
 
 ---
 
