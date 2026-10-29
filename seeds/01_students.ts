@@ -3,9 +3,9 @@ import type { Knex } from "knex";
 // Sample students, so you can lend out tools while developing.
 // The student numbers and first names are made up.
 const students = [
-  { studentNumber: "41873", firstName: "Emma" },
-  { studentNumber: "52310", firstName: "Noah" },
-  { studentNumber: "30456", firstName: "Louise" },
+  { studentNumber: "41873", firstName: "Stebph" },
+  { studentNumber: "52310", firstName: "Lars" },
+  { studentNumber: "30456", firstName: "Enio Bries" },
   { studentNumber: "27741", firstName: "Lucas" },
   { studentNumber: "63092", firstName: "Mila" },
   { studentNumber: "18835", firstName: "Finn" },
