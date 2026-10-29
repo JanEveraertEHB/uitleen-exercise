@@ -110,7 +110,14 @@ def call_agent(url, token, model, requirements, title, branch, commits, body, di
     }
     if model:
         payload["model"] = model
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    # Some endpoints sit behind Cloudflare, which blocks the default "Python-urllib" user agent
+    # (HTTP 403, error code 1010). Send a normal one.
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "pr-validation-action/1.0",
+    }
     raw = http("POST", url, headers, payload, timeout=300)
     return json.loads(raw)["choices"][0]["message"]["content"]
 
