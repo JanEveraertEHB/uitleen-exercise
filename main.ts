@@ -15,7 +15,8 @@ app.use(express.static("public"));
 
 // GET all tools. lentToStudentId is null when the tool is available.
 app.get("/api/tools", (req: Request, res: Response) => {
-  db.select("*").table("tools")
+  db.select("*")
+    .table("tools")
     .then((data) => {
       res.send(data);
     })
@@ -38,7 +39,9 @@ app.post("/api/tools", (req: Request, res: Response) => {
     return;
   }
 
-  db.insert(toolInstance).table("tools").returning("*")
+  db.insert(toolInstance)
+    .table("tools")
+    .returning("*")
     .then((data) => {
       res.status(201).send(data);
     })
@@ -62,7 +65,9 @@ app.patch("/api/tools/:id", (req: Request, res: Response) => {
     return;
   }
 
-  db.update(changes).table("tools").where({ id: id })
+  db.update(changes)
+    .table("tools")
+    .where({ id: id })
     .then((updatedRows) => {
       if (updatedRows === 0) {
         res.status(404).send({ error: "Tool not found" });
@@ -80,7 +85,9 @@ app.patch("/api/tools/:id", (req: Request, res: Response) => {
 app.delete("/api/tools/:id", (req: Request, res: Response) => {
   const id = req.params.id;
 
-  db.delete().table("tools").where({ id: id })
+  db.delete()
+    .table("tools")
+    .where({ id: id })
     .then((deletedRows) => {
       if (deletedRows === 0) {
         res.status(404).send({ error: "Tool not found" });
@@ -103,21 +110,37 @@ app.post("/api/tools/:id/lend", async (req: Request, res: Response) => {
     const firstName = String(req.body.firstName ?? "").trim();
 
     // the student number must exist AND belong to this first name (upper or lower case does not matter)
-    const student = await db.select("*").table("students").where({ studentNumber: studentNumber }).first();
-    if (!student || student.firstName.toLowerCase() !== firstName.toLowerCase()) {
-      res.status(401).send({ error: "Student number and first name do not match" });
+    const student = await db
+      .select("*")
+      .table("students")
+      .where({ studentNumber: studentNumber })
+      .first();
+    if (
+      !student ||
+      student.firstName.toLowerCase() !== firstName.toLowerCase()
+    ) {
+      res
+        .status(401)
+        .send({ error: "Student number and first name do not match" });
       return;
     }
 
-    const tool = await db.select("*").table("tools").where({ id: req.params.id }).first();
+    const tool = await db
+      .select("*")
+      .table("tools")
+      .where({ id: req.params.id })
+      .first();
     if (!tool) {
       res.status(404).send({ error: "Tool not found" });
       return;
     }
 
     // whereNull makes sure two students cannot lend the same tool at the same time
-    const updatedRows = await db.update({ lentToStudentId: student.id })
-      .table("tools").where({ id: tool.id }).whereNull("lentToStudentId");
+    const updatedRows = await db
+      .update({ lentToStudentId: student.id })
+      .table("tools")
+      .where({ id: tool.id })
+      .whereNull("lentToStudentId");
     if (updatedRows === 0) {
       res.status(409).send({ error: "This tool is already lent out" });
       return;
@@ -133,14 +156,21 @@ app.post("/api/tools/:id/lend", async (req: Request, res: Response) => {
 // POST: a tool is returned, so it is available again
 app.post("/api/tools/:id/return", async (req: Request, res: Response) => {
   try {
-    const tool = await db.select("*").table("tools").where({ id: req.params.id }).first();
+    const tool = await db
+      .select("*")
+      .table("tools")
+      .where({ id: req.params.id })
+      .first();
     if (!tool) {
       res.status(404).send({ error: "Tool not found" });
       return;
     }
 
-    const updatedRows = await db.update({ lentToStudentId: null })
-      .table("tools").where({ id: tool.id }).whereNotNull("lentToStudentId");
+    const updatedRows = await db
+      .update({ lentToStudentId: null })
+      .table("tools")
+      .where({ id: tool.id })
+      .whereNotNull("lentToStudentId");
     if (updatedRows === 0) {
       res.status(409).send({ error: "This tool is not lent out" });
       return;
