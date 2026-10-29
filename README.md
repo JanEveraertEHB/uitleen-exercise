@@ -65,7 +65,7 @@ Every pull request is checked by an AI agent. The workflow in `.github/workflows
 1. In GitHub, go to Settings > Secrets and variables > Actions.
 2. Add the secrets `AGENT_URL` (the base URL of the agent, e.g. a DigitalOcean GenAI agent, an OpenAI-compatible `/api/v1/chat/completions` endpoint) and `AGENT_TOKEN` (its access key).
 3. Optional: add the variable `AGENT_MODEL` when the endpoint needs a model name.
-4. Students work in forks, so the workflow lives in this (upstream) repository and runs for their pull requests.
+4. Students work in forks, so the workflow lives in this (upstream) repository and runs for their pull requests. That needs the `pull_request_target` event, and GitHub blocks that event by default in public repositories (enforced from 2 December 2026). Allow it for this workflow only: *Settings → Actions → Policies → New policy*, target the workflow `pr-validate.yml`, and keep `pull_request_target` among the permitted events. Afterwards, check *Policies → Policy insights* for blocked runs. A private repository is not affected by the default.
 
 **Using opencode (Big Pickle) instead of a DigitalOcean agent:** set `AGENT_URL` to `https://opencode.ai/inference/openai/v1/chat/completions`, `AGENT_TOKEN` to your opencode API key and the variable `AGENT_MODEL` to `big-pickle`. The script ends the URL check on `/chat/completions`, so it is used as is. Untested: the opencode docs say free models are meant for use through opencode itself.
 
@@ -73,6 +73,7 @@ Every pull request is checked by an AI agent. The workflow in `.github/workflows
 - The requirements and the script are read from the base branch. A pull request cannot change the rules it is judged by, and the pull request that first adds these files is not checked.
 - The agent also gets the branch name and the commit messages, so it can check the Git conventions of the course.
 - The instructions of the agent are in `.github/agent-instructions.md`. Paste them in the *Instructions* field of the DigitalOcean agent and keep them in sync with `.github/pr-requirements.md`.
+- Runs for the same pull request cancel each other: when two events arrive at once (for example a push and *ready for review*), the older run shows as canceled and the newest one posts the comment. That is normal.
 - Draft pull requests are skipped. Pull requests from forks are checked too: the workflow uses `pull_request_target` and never runs the code of the pull request, it only reads the diff as text.
 - Diffs over 120 000 characters are truncated, and the comment says so.
 - To make a failing verdict fail the check, set `FAIL_ON_VERDICT` to `"true"` in the workflow.

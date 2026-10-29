@@ -1,12 +1,8 @@
-name: Opencode PR Validation
+```yml
+name: AI PR Validation
 
-# pull_request_target (not pull_request) so the workflow also runs for pull
-# requests from forks, with access to the secrets. This is only safe because
-# the job NEVER checks out or runs the code of the pull request: it checks out
-# the base branch and reads the pull request through the GitHub API as text.
-# Do not add steps that check out github.event.pull_request.head.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
 # Least privilege: read code, write the PR comment. Nothing else.
@@ -20,8 +16,10 @@ concurrency:
 
 jobs:
   validate:
-    # Skip drafts (forks are fine, see the comment at the top)
-    if: github.event.pull_request.draft == false
+    # Skip drafts and forks (forks don't get access to secrets anyway)
+    if: >
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -49,3 +47,5 @@ jobs:
           MAX_DIFF_CHARS: "120000"
           FAIL_ON_VERDICT: "false"               # "true" = fail the check on FAIL
         run: python3 .github/scripts/validate_pr.py
+
+```
