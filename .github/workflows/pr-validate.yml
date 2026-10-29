@@ -49,7 +49,7 @@ jobs:
           # Agent endpoint (OpenAI-compatible chat completions), e.g. your
           # DigitalOcean GenAI agent: https://<agent-id>.agents.do-ai.run
           AGENT_URL: ${{ secrets.AGENT_URL }}
-          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+          AGENT_TOKEN: ${{ secrets.OPENCODE_API_KEY }}
           AGENT_MODEL: ${{ vars.AGENT_MODEL }}   # optional
           REQUIREMENTS_FILE: .github/pr-requirements.md
           MAX_DIFF_CHARS: "120000"
