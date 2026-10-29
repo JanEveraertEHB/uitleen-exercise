@@ -180,7 +180,7 @@ def main():
     repo = env("REPO", required=True)
     pr = env("PR_NUMBER", required=True)
     agent_url = env("AGENT_URL", required=True)
-    agent_token = env("AGENT_TOKEN", required=True)
+    agent_token = env("OPENCODE_API_KEY", required=True)
     max_chars = int(env("MAX_DIFF_CHARS", "120000"))
 
     with open(env("REQUIREMENTS_FILE", ".github/pr-requirements.md"), encoding="utf-8") as f:
