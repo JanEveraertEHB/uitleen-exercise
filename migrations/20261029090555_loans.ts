@@ -4,10 +4,10 @@ import type { Knex } from "knex";
 export async function up(knex: Knex): Promise<void> {
       await knex.schema.createTable("loans", function (table) {
         table.increments();
-        table.string("name", 100).notNullable();
-        table.string("description", 500);
-        table.integer("lentAt").unsigned().references("id").inTable("students");
-        table.integer("returnedAt").unsigned().references("id").inTable("students");
+        table.integer("ToolId").unsigned().references("id").inTable("tools");
+        table.integer("StudentId").unsigned().references("id").inTable("students");
+        table.string("lentAt", 100).notNullable();
+        table.string("returnAt", 100);
   });
 }
 
