@@ -34,7 +34,7 @@ app.post("/api/tools", (req: Request, res: Response) => {
   };
 
   if (!toolInstance.name) {
-    res.status(400).send({ error: "A tool needs a name" });
+    res.status(400).send({ error: "A tool needs a name first" });
     return;
   }
 
