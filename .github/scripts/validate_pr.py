@@ -204,7 +204,12 @@ def main():
             env("PR_TITLE", ""), env("PR_BRANCH", ""), commits, env("PR_BODY", ""), diff, truncated,
         )
     except Exception as err:  # noqa: BLE001
-        upsert_comment(repo, pr, token, f"{MARKER}\n## 🤖 AI validation: ⚠️ could not run\n\nThe agent call failed: `{cell(err)[:300]}`")
+        # also print it, so the reason is visible in the Actions log and not only in the comment
+        print(f"::error title=Agent call failed::{str(err)[:500]}", file=sys.stderr)
+        try:
+            upsert_comment(repo, pr, token, f"{MARKER}\n## 🤖 AI validation: ⚠️ could not run\n\nThe agent call failed: `{cell(err)[:300]}`")
+        except Exception as comment_err:  # noqa: BLE001
+            print(f"::error title=Could not post the comment::{str(comment_err)[:500]}", file=sys.stderr)
         sys.exit(1)
 
     result = parse_json(answer)
