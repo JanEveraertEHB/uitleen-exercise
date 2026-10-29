@@ -1,0 +1,51 @@
+name: Opencode PR Validation
+
+# pull_request_target (not pull_request) so the workflow also runs for pull
+# requests from forks, with access to the secrets. This is only safe because
+# the job NEVER checks out or runs the code of the pull request: it checks out
+# the base branch and reads the pull request through the GitHub API as text.
+# Do not add steps that check out github.event.pull_request.head.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Least privilege: read code, write the PR comment. Nothing else.
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ai-pr-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Skip drafts (forks are fine, see the comment at the top)
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Check out the BASE branch, not the PR head: the script and the
+      # requirements come from trusted code, so a PR can't edit its own judge.
+      - name: Checkout base branch (trusted code only)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Validate PR against requirements
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          # Agent endpoint (OpenAI-compatible chat completions), e.g. your
+          # DigitalOcean GenAI agent: https://<agent-id>.agents.do-ai.run
+          AGENT_URL: ${{ secrets.AGENT_URL }}
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+          AGENT_MODEL: ${{ vars.AGENT_MODEL }}   # optional
+          REQUIREMENTS_FILE: .github/pr-requirements.md
+          MAX_DIFF_CHARS: "120000"
+          FAIL_ON_VERDICT: "false"               # "true" = fail the check on FAIL
+        run: python3 .github/scripts/validate_pr.py
