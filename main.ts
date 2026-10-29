@@ -5,7 +5,7 @@ import knexfile from "./knexfile.js";
 const db = knex(knexfile);
 
 const app = express();
-const port = 3000;
+const port = 21;
 
 // parse JSON request bodies into req.body
 app.use(express.json());
