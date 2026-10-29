@@ -1,4 +1,3 @@
-
 name: AI PR Validation
 
 # pull_request_target (not pull_request) so the workflow also runs for pull
@@ -35,7 +34,9 @@ jobs:
       - name: Checkout base branch (trusted code only)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          # the tip of the base branch, so a re-run also uses the latest script
+          # (base.sha is frozen in the event and goes stale)
+          ref: ${{ github.event.pull_request.base.ref }}
           persist-credentials: false # the token is not needed in .git, the script gets it through env
 
       - name: Validate PR against requirements
