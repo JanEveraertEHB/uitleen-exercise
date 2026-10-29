@@ -37,6 +37,8 @@ export default class Tool {
       <article id="tool-${this.id}">
         <h2>${escapeHtml(this.name)}</h2>
         <p>${escapeHtml(this.description ?? "")}</p>${statusAndButton}
+        <button class="history-button" id="tool-history-${this.id}">History</button>
+        <div id="tool-history-content-${this.id}"></div>
         <button class="delete-button" id="tool-delete-${this.id}">Delete</button>
       </article>
     `;

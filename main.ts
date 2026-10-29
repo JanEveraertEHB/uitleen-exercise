@@ -25,6 +25,26 @@ app.get("/api/tools", (req: Request, res: Response) => {
     });
 });
 
+app.get("/api/tools/:id/history", async (req: Request, res: Response) => {
+  try {
+    const tool = await db.select("id").table("tools").where({ id: req.params.id }).first();
+    if (!tool) {
+      res.status(404).send({ error: "Tool not found" });
+      return;
+    }
+
+    const loans = await db.select("students.firstName", "loans.lentAt", "loans.returnedAt")
+      .table("loans")
+      .join("students", "loans.studentId", "students.id")
+      .where("loans.toolId", tool.id)
+      .orderBy("loans.lentAt", "desc");
+    res.send(loans);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ error: "Something went wrong" });
+  }
+});
+
 // POST a new tool
 app.post("/api/tools", (req: Request, res: Response) => {
   // only pick the fields we allow to be set, never pass req.body straight to the database
@@ -115,10 +135,22 @@ app.post("/api/tools/:id/lend", async (req: Request, res: Response) => {
       return;
     }
 
-    // whereNull makes sure two students cannot lend the same tool at the same time
-    const updatedRows = await db.update({ lentToStudentId: student.id })
-      .table("tools").where({ id: tool.id }).whereNull("lentToStudentId");
-    if (updatedRows === 0) {
+    const lent = await db.transaction(async (trx) => {
+      const updatedRows = await trx("tools").update({ lentToStudentId: student.id })
+        .where({ id: tool.id }).whereNull("lentToStudentId");
+      if (updatedRows === 0) {
+        return false;
+      }
+
+      await trx("loans").insert({
+        toolId: tool.id,
+        studentId: student.id,
+        lentAt: new Date().toISOString(),
+        returnedAt: null
+      });
+      return true;
+    });
+    if (!lent) {
       res.status(409).send({ error: "This tool is already lent out" });
       return;
     }
@@ -139,9 +171,18 @@ app.post("/api/tools/:id/return", async (req: Request, res: Response) => {
       return;
     }
 
-    const updatedRows = await db.update({ lentToStudentId: null })
-      .table("tools").where({ id: tool.id }).whereNotNull("lentToStudentId");
-    if (updatedRows === 0) {
+    const returned = await db.transaction(async (trx) => {
+      const updatedRows = await trx("tools").update({ lentToStudentId: null })
+        .where({ id: tool.id }).whereNotNull("lentToStudentId");
+      if (updatedRows === 0) {
+        return false;
+      }
+
+      await trx("loans").where({ toolId: tool.id }).whereNull("returnedAt")
+        .update({ returnedAt: new Date().toISOString() });
+      return true;
+    });
+    if (!returned) {
       res.status(409).send({ error: "This tool is not lent out" });
       return;
     }

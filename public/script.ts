@@ -1,4 +1,5 @@
 import Tool from "./Tool.js";
+import Loan from "./Loan.js";
 
 const API_URI = "http://localhost:3000";
 
@@ -26,6 +27,7 @@ function getToolListAndDisplay() {
       // the buttons only exist after rendering, so add the listeners now
       addClickListeners("lend-button", "tool-lend-", lendTool);
       addClickListeners("return-button", "tool-return-", returnTool);
+      addClickListeners("history-button", "tool-history-", showHistory);
       addClickListeners("delete-button", "tool-delete-", deleteTool);
     })
     .catch((e) => {
@@ -87,6 +89,31 @@ function returnTool(id: string) {
   sendRequest("/api/tools/" + id + "/return", "POST");
 }
 
+function showHistory(id: string) {
+  fetch(API_URI + "/api/tools/" + id + "/history")
+    .then(async (response) => {
+      const data = await response.json();
+      if (!response.ok) {
+        showMessage(data.error);
+        return;
+      }
+
+      const loans = data.map((loan: Loan) => new Loan(loan.firstName, loan.lentAt, loan.returnedAt));
+      const historyElement = document.getElementById("tool-history-content-" + id) as HTMLDivElement;
+      const times = loans.length === 1 ? "time" : "times";
+      historyElement.innerHTML = `
+        <p>Lent out ${loans.length} ${times}</p>
+        <table>
+          <thead><tr><th>First name</th><th>Lent on</th><th>For how long</th></tr></thead>
+          <tbody>${loans.map((loan: Loan) => loan.renderHtmlString()).join("")}</tbody>
+        </table>`;
+    })
+    .catch((e) => {
+      console.error(e);
+      showMessage("Could not load loan history");
+    });
+}
+
 function deleteTool(id: string) {
   sendRequest("/api/tools/" + id, "DELETE");
 }
@@ -101,3 +128,6 @@ function addTool() {
 }
 
 init();
+
+
+// Test Comment
